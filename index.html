@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz o Regionach Polski</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="shortcut icon" href="Sroka.webp" type="image/x-icon" />
+  </head>
+  <body>
+    <div class="mascot"><img src="Sroka.webp" alt="Sroka" /></div>
+    <h1>Quiz o Regionach Polski</h1>
+
+    <div class="progressBar">
+      <div class="progressFill" id="progress"></div>
+    </div>
+
+    <div class="instructions">
+      <p>
+        Sprawdź swoją wiedzę! Wskaż województwo(a), do których należy każdy
+        region.
+      </p>
+    </div>
+
+    <div class="modeSelector">
+      <button class="modeBtn active" id="textMode">Tekst</button>
+      <button class="modeBtn" id="selectMode">Wybór</button>
+    </div>
+
+    <div id="questionContainer"></div>
+
+    <button id="checkAnswers">Sprawdź odpowiedzi</button>
+    <button id="newQuiz" class="newQuiz">Nowy quiz</button>
+
+    <div class="resultPopup" id="resultPopup">
+      <div class="resultCard">
+        <div class="resultTitle" id="resultTitle">Świetnie!</div>
+        <div class="resultScore" id="resultScore">0/5</div>
+        <button id="continueBtn">Kontynuuj</button>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
