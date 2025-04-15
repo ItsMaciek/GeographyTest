@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let currentMode = "text";
     let currentStep = 0;
     let correctAnswers = 0;
-    const totalSteps = 5;
+    const totalSteps = parseInt(prompt("Liczba pytań: "));
 
     function getRandomRegions(count) {
         const regions = Object.keys(allRegions);
@@ -334,11 +334,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 feedback.className = "feedback incorrect";
             }
 
-            setTimeout(() => {
+            const nextButton = document.getElementById("nextQuestionBtn");
+            nextButton.style.display = "inline-block";
+            nextButton.disabled = false;
+            document.getElementById("nextQuestionBtn").addEventListener("click", () => {
+                document.getElementById("nextQuestionBtn").style.display = "none";
                 currentStep++;
                 updateProgress();
                 showCurrentQuestion();
-            }, 1500);
+            });
+
+
         }
     }
 
@@ -379,7 +385,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document
         .getElementById("checkAnswers")
-        .addEventListener("click", checkAnswers);
+        .addEventListener("click", function (event) {
+            act = 1;
+            checkAnswers();
+        }
+        );
+    var act = 0;
+    document
+        .addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && act == 0) {
+                act = 1;
+                checkAnswers();
+            }
+            else if (event.key === "Enter" && act == 1) {
+                act = 0;
+                updateProgress();
+                document.getElementById("nextQuestionBtn").style.display = "none";
+                currentStep++;
+                showCurrentQuestion();
+            }
+        });
     document
         .getElementById("newQuiz")
         .addEventListener("click", generateQuiz);
