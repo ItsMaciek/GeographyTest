@@ -1,4 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
+    let act = 0;
+    let totalSteps = parseInt(prompt("Liczba pytań: ")) || 5;
+    if (isNaN(totalSteps) || totalSteps <= 0) {
+        totalSteps = 5;
+    }
     const allRegions = {
         "Pobrzeże koszalińskie": ["zachodniopomorskie"],
         "Jezioro Żarnowieckie": ["pomorskie"],
@@ -40,12 +45,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "Żuławy Wiślane": ["pomorskie", "warmińsko-mazurskie"],
         "Kotlina Warszawska": ["mazowieckie"],
         "Kotlina Kłodzka": ["dolnośląskie"],
-        "Kotlina Sandomierska": [
-            "podkarpackie",
-            "świętokrzyskie",
-            "małopolskie",
-            "lubelskie",
-        ],
+        "Kotlina Sandomierska": ["podkarpackie", "świętokrzyskie", "małopolskie", "lubelskie"],
         "Kotlina Oświęcimska": ["małopolskie"],
         "Szeskie Wzgórza": ["warmińsko-mazurskie"],
         "Wzgórza Ostrzeszowskie": ["wielkopolskie"],
@@ -71,67 +71,31 @@ document.addEventListener("DOMContentLoaded", function () {
         "Góry Stołowe": ["dolnośląskie"],
         "Góry Izerskie": ["dolnośląskie"],
         "Góry Kaczawskie": ["dolnośląskie"],
-        "Rzeka Wisła": [
-            "śląskie",
-            "małopolskie",
-            "świętokrzyskie",
-            "mazowieckie",
-            "kujawsko-pomorskie",
-            "pomorskie",
-        ],
-        "Rzeka Odra": [
-            "śląskie",
-            "opolskie",
-            "dolnośląskie",
-            "lubuskie",
-            "zachodniopomorskie",
-        ],
-        "Rzeka Warta": [
-            "śląskie",
-            "łódzkie",
-            "wielkopolskie",
-            "lubuskie",
-            "zachodniopomorskie",
-        ],
+        "Rzeka Wisła": ["śląskie", "małopolskie", "świętokrzyskie", "mazowieckie", "kujawsko-pomorskie", "pomorskie"],
+        "Rzeka Odra": ["śląskie", "opolskie", "dolnośląskie", "lubuskie", "zachodniopomorskie"],
+        "Rzeka Warta": ["śląskie", "łódzkie", "wielkopolskie", "lubuskie", "zachodniopomorskie"],
         "Rzeka San": ["podkarpackie", "lubelskie"],
         "Rzeka Bug": ["lubelskie", "mazowieckie", "podlaskie"],
         "Rzeka Dunajec": ["małopolskie", "podkarpackie"],
     };
 
-    const allProvinces = [];
-    for (const region in allRegions) {
-        for (const province of allRegions[region]) {
-            if (!allProvinces.includes(province)) {
-                allProvinces.push(province);
-            }
-        }
-    }
-    allProvinces.sort();
+    const allProvinces = Array.from(new Set(Object.values(allRegions).flat())).sort();
 
     let currentQuiz = {};
     let currentMode = "text";
     let currentStep = 0;
     let correctAnswers = 0;
-    const totalSteps = parseInt(prompt("Liczba pytań: "));
 
     function getRandomRegions(count) {
         const regions = Object.keys(allRegions);
         const selected = {};
-        const result = {};
 
-        count = Math.min(count, regions.length);
-
-        while (Object.keys(selected).length < count) {
-            const randomIndex = Math.floor(Math.random() * regions.length);
-            const region = regions[randomIndex];
-
-            if (!selected[region]) {
-                selected[region] = true;
-                result[region] = allRegions[region];
-            }
+        while (Object.keys(selected).length < Math.min(count, regions.length)) {
+            const region = regions[Math.floor(Math.random() * regions.length)];
+            selected[region] = allRegions[region];
         }
 
-        return result;
+        return selected;
     }
 
     function generateTextInput(index) {
@@ -144,90 +108,87 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function generateSelectSystem(index) {
         const container = document.createElement("div");
-        container.id = "selectContainer" + index;
         container.className = "selectContainer";
 
         const selectedDisplay = document.createElement("div");
-        selectedDisplay.id = "selectedProvinces" + index;
         selectedDisplay.className = "selectedProvinces";
-        container.appendChild(selectedDisplay);
 
         const select = document.createElement("select");
-        select.id = "provinceSelect" + index;
-
-        const defaultOption = document.createElement("option");
-        defaultOption.value = "";
-        defaultOption.textContent = "Wybierz województwo";
-        defaultOption.selected = true;
-        select.appendChild(defaultOption);
-
-        for (const province of allProvinces) {
-            const option = document.createElement("option");
-            option.value = province;
-            option.textContent = province;
-            select.appendChild(option);
-        }
+        const hiddenInput = document.createElement("input");
+        hiddenInput.type = "hidden";
+        hiddenInput.id = "area" + index;
 
         const addButton = document.createElement("button");
-        addButton.className = "addProvinceBtn";
         addButton.textContent = "Dodaj województwo";
         addButton.type = "button";
 
         const selectedProvinces = [];
 
-        const hiddenInput = document.createElement("input");
-        hiddenInput.type = "hidden";
-        hiddenInput.id = "area" + index;
-        hiddenInput.value = JSON.stringify(selectedProvinces);
-        container.appendChild(hiddenInput);
+        const defaultOption = new Option("Wybierz województwo", "", true);
+        select.appendChild(defaultOption);
 
-        addButton.addEventListener("click", function () {
-            const selectedValue = select.value;
-            if (selectedValue && !selectedProvinces.includes(selectedValue)) {
-                selectedProvinces.push(selectedValue);
-                updateSelectedDisplay();
-                hiddenInput.value = JSON.stringify(selectedProvinces);
-                select.value = "";
-            }
+        allProvinces.forEach(province => {
+            select.appendChild(new Option(province, province));
         });
 
         function updateSelectedDisplay() {
             selectedDisplay.innerHTML = "";
-
             if (selectedProvinces.length === 0) {
                 selectedDisplay.textContent = "Brak wybranych województw";
                 return;
             }
-
-            for (let i = 0; i < selectedProvinces.length; i++) {
-                const province = selectedProvinces[i];
+            selectedProvinces.forEach((province, i) => {
                 const tag = document.createElement("span");
                 tag.className = "provinceTag";
                 tag.textContent = province;
-
-                const removeBtn = document.createElement("span");
-                removeBtn.className = "remove";
-                removeBtn.textContent = "×";
-                removeBtn.addEventListener("click", function () {
+                const remove = document.createElement("span");
+                remove.className = "remove";
+                remove.textContent = "×";
+                remove.onclick = () => {
                     selectedProvinces.splice(i, 1);
                     updateSelectedDisplay();
                     hiddenInput.value = JSON.stringify(selectedProvinces);
-                });
-
-                tag.appendChild(removeBtn);
+                };
+                tag.appendChild(remove);
                 selectedDisplay.appendChild(tag);
-            }
+            });
         }
 
-        updateSelectedDisplay();
+        addButton.onclick = () => {
+            const val = select.value;
+            if (val && !selectedProvinces.includes(val)) {
+                selectedProvinces.push(val);
+                updateSelectedDisplay();
+                hiddenInput.value = JSON.stringify(selectedProvinces);
+                select.value = "";
+            }
+        };
 
+        updateSelectedDisplay();
+        hiddenInput.value = JSON.stringify(selectedProvinces);
+
+        container.appendChild(selectedDisplay);
         container.appendChild(select);
         container.appendChild(addButton);
+        container.appendChild(hiddenInput);
 
         return container;
     }
 
+    function getSelectedProvinces(index) {
+        const input = document.getElementById("area" + index);
+        if (currentMode === "text") {
+            return input.value.split(",").map(v => v.trim()).filter(v => v);
+        }
+        try {
+            return JSON.parse(input.value);
+        } catch {
+            return [];
+        }
+    }
+
     function generateQuiz() {
+        act = 0;
         currentQuiz = getRandomRegions(totalSteps);
         currentStep = 0;
         correctAnswers = 0;
@@ -238,40 +199,29 @@ document.addEventListener("DOMContentLoaded", function () {
     function showCurrentQuestion() {
         const container = document.getElementById("questionContainer");
         container.innerHTML = "";
+        const region = Object.keys(currentQuiz)[currentStep];
 
-        if (currentStep >= totalSteps) {
-            showResults();
-            return;
-        }
+        const card = document.createElement("div");
+        card.className = "questionCard";
 
-        const regions = Object.keys(currentQuiz);
-        if (currentStep < regions.length) {
-            const region = regions[currentStep];
+        const title = document.createElement("div");
+        title.className = "questionTitle";
+        title.textContent = `Do jakiego województwa należy: ${region}?`;
 
-            const card = document.createElement("div");
-            card.className = "questionCard";
+        const inputContainer = document.createElement("div");
+        inputContainer.appendChild(
+            currentMode === "text" ? generateTextInput(1) : generateSelectSystem(1)
+        );
 
-            const title = document.createElement("div");
-            title.className = "questionTitle";
-            title.textContent = `Do jakiego województwa należy: ${region}?`;
+        const feedback = document.createElement("div");
+        feedback.className = "feedback";
+        feedback.id = "feedback1";
 
-            const inputContainer = document.createElement("div");
-            if (currentMode === "text") {
-                inputContainer.appendChild(generateTextInput(1));
-            } else {
-                inputContainer.appendChild(generateSelectSystem(1));
-            }
+        card.appendChild(title);
+        card.appendChild(inputContainer);
+        card.appendChild(feedback);
 
-            const feedback = document.createElement("div");
-            feedback.className = "feedback";
-            feedback.id = "feedback1";
-
-            card.appendChild(title);
-            card.appendChild(inputContainer);
-            card.appendChild(feedback);
-
-            container.appendChild(card);
-        }
+        container.appendChild(card);
     }
 
     function updateProgress() {
@@ -280,72 +230,24 @@ document.addEventListener("DOMContentLoaded", function () {
         progressBar.style.width = `${percentage}%`;
     }
 
-    function getSelectedProvinces(index) {
-        if (currentMode === "text") {
-            const input = document.getElementById("area" + index);
-            return input.value
-                .split(",")
-                .map((province) => province.trim())
-                .filter((province) => province !== "");
-        } else {
-            const input = document.getElementById("area" + index);
-            try {
-                return JSON.parse(input.value);
-            } catch (e) {
-                return [];
-            }
-        }
-    }
-
     function checkAnswers() {
-        const regions = Object.keys(currentQuiz);
-        if (currentStep < regions.length) {
-            const region = regions[currentStep];
-            const userProvinces = getSelectedProvinces(1);
-            const correctProvinces = currentQuiz[region];
+        const region = Object.keys(currentQuiz)[currentStep];
+        const user = getSelectedProvinces(1).map(v => v.toLowerCase());
+        const correct = currentQuiz[region].map(v => v.toLowerCase());
 
-            let isCorrect = true;
+        const isCorrect = user.length === correct.length &&
+            user.every(val => correct.includes(val));
 
-            if (userProvinces.length !== correctProvinces.length) {
-                isCorrect = false;
-            } else {
-                for (const userProvince of userProvinces) {
-                    const foundMatch = correctProvinces.some(
-                        (correctProvince) =>
-                            correctProvince.toLowerCase() === userProvince.toLowerCase()
-                    );
+        const feedback = document.getElementById("feedback1");
+        feedback.className = `feedback ${isCorrect ? "correct" : "incorrect"}`;
+        feedback.textContent = isCorrect ? "Poprawnie!" : correct.join(", ");
 
-                    if (!foundMatch) {
-                        isCorrect = false;
-                        break;
-                    }
-                }
-            }
+        if (isCorrect) correctAnswers++;
 
-            const feedback = document.getElementById("feedback1");
-            if (isCorrect) {
-                feedback.textContent = "Poprawnie!";
-                feedback.className = "feedback correct";
-                correctAnswers++;
-            } else {
-                feedback.textContent =
-                    "Niepoprawnie! Poprawna odpowiedź: " +
-                    correctProvinces.join(", ");
-                feedback.className = "feedback incorrect";
-            }
-
-            const nextButton = document.getElementById("nextQuestionBtn");
-            nextButton.style.display = "inline-block";
-            nextButton.disabled = false;
-            document.getElementById("nextQuestionBtn").addEventListener("click", () => {
-                document.getElementById("nextQuestionBtn").style.display = "none";
-                currentStep++;
-                updateProgress();
-                showCurrentQuestion();
-            });
-
-
-        }
+        currentStep++;
+        act = 1;
+        document.getElementById("nextQuestionBtn").style.display = "block";
+        document.getElementById("checkAnswers").style.display = "none";
     }
 
     function showResults() {
@@ -355,69 +257,74 @@ document.addEventListener("DOMContentLoaded", function () {
 
         popup.style.display = "flex";
 
-        if (correctAnswers === totalSteps) {
-            title.textContent = "Gratulacje!";
-        } else if (correctAnswers >= Math.floor(totalSteps / 2)) {
-            title.textContent = "Dobra robota!";
-        } else {
-            title.textContent = "Spróbuj ponownie!";
-        }
+        if (correctAnswers === totalSteps) title.textContent = "Gratulacje!";
+        else if (correctAnswers >= Math.floor(totalSteps / 2)) title.textContent = "Dobra robota!";
+        else title.textContent = "Spróbuj ponownie!";
 
         score.textContent = `${correctAnswers}/${totalSteps} poprawnych odpowiedzi`;
     }
 
     function switchMode(mode) {
         if (mode === currentMode) return;
-
         currentMode = mode;
 
-        document
-            .getElementById("textMode")
-            .classList.toggle("active", mode === "text");
-        document
-            .getElementById("selectMode")
-            .classList.toggle("active", mode === "select");
+        document.getElementById("textMode").classList.toggle("active", mode === "text");
+        document.getElementById("selectMode").classList.toggle("active", mode === "select");
 
         showCurrentQuestion();
     }
 
-    generateQuiz();
-
-    document
-        .getElementById("checkAnswers")
-        .addEventListener("click", function (event) {
-            act = 1;
+    document.getElementById("checkAnswers").onclick = () => {
+        if (act === 0) {
             checkAnswers();
+            updateProgress();
+        };
+    };
+
+    document.getElementById("nextQuestionBtn").onclick = () => {
+        if (currentStep >= totalSteps) {
+            showResults();
+        } else {
+            act = 0;
+            updateProgress();
+            document.getElementById("nextQuestionBtn").style.display = "none";
+            document.getElementById("checkAnswers").style.display = "block";
+            showCurrentQuestion();
         }
-        );
-    var act = 0;
-    document
-        .addEventListener("keydown", function (event) {
-            if (event.key === "Enter" && act == 0) {
-                act = 1;
+    };
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            if (act === 0) {
                 checkAnswers();
-            }
-            else if (event.key === "Enter" && act == 1) {
-                act = 0;
                 updateProgress();
-                document.getElementById("nextQuestionBtn").style.display = "none";
-                currentStep++;
-                showCurrentQuestion();
+            } else if (act === 1) {
+                if (currentStep >= totalSteps) {
+                    updateProgress();
+                    showResults();
+                    act = 3;
+                }
+                else {
+                    act = 0;
+                    document.getElementById("nextQuestionBtn").style.display = "none";
+                    document.getElementById("checkAnswers").style.display = "block";
+                    showCurrentQuestion();
+                }
             }
-        });
-    document
-        .getElementById("newQuiz")
-        .addEventListener("click", generateQuiz);
-    document
-        .getElementById("textMode")
-        .addEventListener("click", () => switchMode("text"));
-    document
-        .getElementById("selectMode")
-        .addEventListener("click", () => switchMode("select"));
-    document
-        .getElementById("continueBtn")
-        .addEventListener("click", () => {
-            document.getElementById("resultPopup").style.display = "none";
-            generateQuiz();
-        });
+            else {
+                document.getElementById("resultPopup").style.display = "none";
+                generateQuiz();
+            }
+        }
+    });
+
+    document.getElementById("newQuiz").addEventListener("click", generateQuiz);
+    document.getElementById("textMode").addEventListener("click", () => switchMode("text"));
+    document.getElementById("selectMode").addEventListener("click", () => switchMode("select"));
+    document.getElementById("continueBtn").addEventListener("click", () => {
+        document.getElementById("resultPopup").style.display = "none";
+        generateQuiz();
+    });
+
+    generateQuiz();
 });
